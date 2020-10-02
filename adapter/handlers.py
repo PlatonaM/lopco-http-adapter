@@ -54,11 +54,11 @@ class Notification(threading.Thread):
         super().__init__(name="notifier", daemon=True)
         self.__queue = queue.Queue()
 
-    def add(self, f_hash, m_id, f_name):
+    def add(self, f_hash, ds_id, f_name):
         self.__queue.put_nowait(
             {
                 "hash": f_hash,
-                "machine_id": m_id,
+                "ds_id": ds_id,
                 "file_name": f_name
             }
         )
