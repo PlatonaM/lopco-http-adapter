@@ -33,7 +33,7 @@ app = falcon.API()
 app.req_options.strip_url_path_trailing_slash = True
 
 routes = (
-    ("/{m_id}", api.Upload(stg_handler, notif_handler)),
+    ("/{ds_id}", api.Upload(stg_handler, notif_handler)),
 )
 
 for route in routes:
