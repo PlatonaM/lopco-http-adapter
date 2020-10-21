@@ -39,14 +39,14 @@ class Upload:
         self.__stg_handler = stg_handler
         self.__notif_handler = notif_handler
 
-    def on_post(self, req: falcon.request.Request, resp: falcon.response.Response, m_id):
+    def on_post(self, req: falcon.request.Request, resp: falcon.response.Response, ds_id):
         reqDebugLog(req)
         try:
             f_name, hash = self.__stg_handler.save(req.stream)
             resp.body = hash
             resp.content_type = falcon.MEDIA_TEXT
             resp.status = falcon.HTTP_200
-            self.__notif_handler.add(hash, m_id, f_name)
+            self.__notif_handler.add(hash, ds_id, f_name)
         except Exception as ex:
             resp.status = falcon.HTTP_500
             reqErrorLog(req, ex)
