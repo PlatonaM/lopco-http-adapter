@@ -20,7 +20,7 @@ __all__ = ("Upload", )
 from .logger import getLogger
 from . import handlers
 import falcon
-
+import json
 
 
 logger = getLogger(__name__.split(".", 1)[-1])
@@ -43,10 +43,16 @@ class Upload:
         reqDebugLog(req)
         try:
             f_name, hash = self.__stg_handler.save(req.stream)
-            resp.body = hash
-            resp.content_type = falcon.MEDIA_TEXT
+            event = self.__notif_handler.add(hash, ds_id, f_name)
+            event.wait()
+            resp.content_type = falcon.MEDIA_JSON
+            resp.body = json.dumps(
+                {
+                    "checksum": hash,
+                    "job_id": event.job_id
+                }
+            )
             resp.status = falcon.HTTP_200
-            self.__notif_handler.add(hash, ds_id, f_name)
         except Exception as ex:
             resp.status = falcon.HTTP_500
             reqErrorLog(req, ex)

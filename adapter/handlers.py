@@ -55,25 +55,32 @@ class Notification(threading.Thread):
         self.__queue = queue.Queue()
 
     def add(self, f_hash, ds_id, f_name):
+        event = threading.Event()
         self.__queue.put_nowait(
-            {
-                "hash": f_hash,
-                "ds_id": ds_id,
-                "file_name": f_name
-            }
+            (
+                {
+                    "hash": f_hash,
+                    "ds_id": ds_id,
+                    "file_name": f_name
+                },
+                event
+            )
         )
+        return event
 
     def run(self):
         while True:
-            data = self.__queue.get()
+            data, event = self.__queue.get()
             while True:
                 try:
                     resp = requests.post("{}/{}".format(conf.JM.url, conf.JM.api), json=data)
-                    if resp.status_code == 200:
-                        logger.debug("sent notification for '{}'".format(data["hash"]))
-                        break
-                    if resp.status_code == 409:
-                        logger.warning("already sent notification for '{}'".format(data["hash"]))
+                    if resp.status_code in (200, 409):
+                        if resp.status_code == 200:
+                            logger.debug("sent notification for '{}'".format(data["hash"]))
+                        if resp.status_code == 409:
+                            logger.warning("already sent notification for '{}'".format(data["hash"]))
+                        event.job_id = resp.text
+                        event.set()
                         break
                     logger.warning("can't send notification for '{}' - {}".format(data["hash"], resp.status_code))
                 except Exception as ex:
